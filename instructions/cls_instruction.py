@@ -6,7 +6,7 @@ from virtualmachine.machine import Machine
 
 class ClsInstruction(Instruction):
     def execute(self, machine: Machine):
-        raise NotImplemented
+        machine.Screen.clear()
 
     @staticmethod
     def opcode_format() -> str:

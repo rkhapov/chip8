@@ -18,3 +18,8 @@ class Instruction:
     @abstractmethod
     def opcode_format() -> str:
         raise NotImplemented
+
+
+# JumpInstruction - class to determinate instruction is instruction which change PC
+class JumpInstruction(Instruction):
+    pass
