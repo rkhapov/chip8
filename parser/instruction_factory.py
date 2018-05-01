@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
-from instructions.cls_instruction import ClsInstruction
 from parser.opcode_formatter import *
-from virtualmachine.instruction import Instruction
 from parser.opcode_unit import *
+from virtualmachine.instructions import *
+
+
+class InstructionFactoryError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
 
 
 class InstructionFactory:
@@ -22,12 +26,23 @@ class InstructionFactory:
 
         return self._cache[tupled]
 
+    def get_instructions_classes(self):
+        return self._instructions
+
     def _get_instruction_by_opcode(self, opcode: bytearray):
+        instructions = []
+
         for instruction in self._instructions:
             if self._opcode_formatter.is_opcode_valid(opcode, instruction.opcode_format()):
-                return self._create_instruction_from_opcode(instruction, opcode)
+                instructions.append(instruction)
 
-        raise NotImplemented('Unknown instruction {}'.format(list(map(hex, opcode))))
+        if len(instructions) == 0:
+            raise InstructionFactoryError('Unknown instruction {}'.format(list(map(hex, opcode))))
+
+        if len(instructions) > 1:
+            raise InstructionFactoryError('Ambigious opcode: {}'.format(list(map(hex, opcode))))
+
+        return self._create_instruction_from_opcode(instructions[0], opcode)
 
     def _create_instruction_from_opcode(self, instruction_type: type(Instruction), opcode: bytearray):
         instruction = instruction_type()
@@ -45,4 +60,7 @@ class InstructionFactory:
 
     @staticmethod
     def _get_instructions_list():
-        return [ClsInstruction]
+        instruction_subclasses = [instr for instr in Instruction.__subclasses__() if instr != JumpInstruction]
+        jump_subclasses = [instr for instr in JumpInstruction.__subclasses__()]
+
+        return instruction_subclasses + jump_subclasses

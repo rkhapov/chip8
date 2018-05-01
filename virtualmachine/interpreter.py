@@ -18,14 +18,14 @@ class Interpreter:
 
         return self._machine.ExitCode
 
-    def load_program(self, filename):
+    def load_program_bytes(self, program: bytearray):
         self._machine.reset()
+        for i in range(len(program)):
+            self._machine.Memory[i] = program[i]
 
+    def load_program(self, filename):
         with open(filename, 'rb') as file:
-            program = file.read()
-
-            for i in range(len(program)):
-                self._machine.Memory[i] = program[i]
+            self.load_program_bytes(bytearray(file.read()))
 
     def _execute_next_instruction(self):
         opcode = self._read_next_instruction()
