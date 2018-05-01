@@ -32,11 +32,11 @@ class Stack:
 
 
 class Machine:
-    def __init__(self, screen: Screen, keyboard: Keyboard, memory_size: int=0x1000):
+    def __init__(self, screen: Screen, keyboard: Keyboard, memory_size: int = 0x1000):
         self.Screen = screen
         self.Keyboard = keyboard
         self.Stack = Stack()
-        self.Memory = bytearray(memory_size)
+        self.Memory = Machine.create_memory(memory_size)
         self.MemorySize = len(self.Memory)
         self.PC = 0
         self.VRegisters = bytearray(16)
@@ -51,7 +51,7 @@ class Machine:
     def reset(self):
         self.Screen.clear()
         self.Stack = Stack()
-        self.Memory = bytearray(self.MemorySize)
+        self.Memory = Machine.create_memory(self.MemorySize)
         self.PC = 0
         self.VRegisters = bytearray(16)
         self.AddressRegister = 0
@@ -61,3 +61,29 @@ class Machine:
 
     def make_sound(self):
         pass
+
+    @staticmethod
+    def create_memory(memory_size):
+        memory = bytearray(memory_size)
+
+        standard_sprite = [0xF0, 0x90, 0x90, 0x90, 0xF0,  # 0
+                           0x20, 0x60, 0x20, 0x20, 0x70,  # 1
+                           0xF0, 0x10, 0xF0, 0x80, 0xF0,  # 2
+                           0xF0, 0x10, 0xF0, 0x10, 0xF0,  # 3
+                           0x90, 0x90, 0xF0, 0x10, 0x10,  # 4
+                           0xF0, 0x80, 0xF0, 0x10, 0xF0,  # 5
+                           0xF0, 0x80, 0xF0, 0x90, 0xF0,  # 6
+                           0xF0, 0x10, 0x20, 0x40, 0x40,  # 7
+                           0xF0, 0x90, 0xF0, 0x90, 0xF0,  # 8
+                           0xF0, 0x90, 0xF0, 0x10, 0xF0,  # 9
+                           0xF0, 0x90, 0xF0, 0x90, 0x90,  # A
+                           0xE0, 0x90, 0xE0, 0x90, 0xE0,  # B
+                           0xF0, 0x80, 0x80, 0x80, 0xF0,  # C
+                           0xE0, 0x90, 0x90, 0x90, 0xE0,  # D
+                           0xF0, 0x80, 0xF0, 0x80, 0xF0,  # E
+                           0xF0, 0x80, 0xF0, 0x80, 0x80]  # F
+
+        for i in range(len(standard_sprite)):
+            memory[i] = standard_sprite[i]
+
+        return memory

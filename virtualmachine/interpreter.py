@@ -18,7 +18,7 @@ class Interpreter:
         self._machine.PC = 0x200
         while self._machine.ExitCode is None:
             self._execute_next_instruction()
-            time.sleep(0.005)
+            time.sleep(0.0005)
 
         return self._machine.ExitCode
 

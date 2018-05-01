@@ -379,7 +379,7 @@ class Adi(Instruction):
 
 class LoadChar(Instruction):
     def execute(self, machine: Machine):
-        raise NotImplemented
+        machine.AddressRegister = 5 * machine.VRegisters[self.arg_registers[0]]
 
     @staticmethod
     def opcode_format() -> str:
@@ -388,7 +388,13 @@ class LoadChar(Instruction):
 
 class Bcd(Instruction):
     def execute(self, machine: Machine):
-        raise NotImplemented
+        hundreds = machine.Memory[self.arg_registers[0]] // 100
+        tens = (machine.Memory[self.arg_registers[0]] // 10) % 10
+        ones = machine.Memory[self.arg_registers[0]] % 10
+
+        machine.Memory[machine.AddressRegister] = 5 * hundreds
+        machine.Memory[machine.AddressRegister + 1] = 5 * tens
+        machine.Memory[machine.AddressRegister + 2] = 5 * ones
 
     @staticmethod
     def opcode_format() -> str:
@@ -397,7 +403,8 @@ class Bcd(Instruction):
 
 class StoreRegisters(Instruction):
     def execute(self, machine: Machine):
-        raise NotImplemented
+        for i in range(0, self.arg_registers[0] + 1):
+            machine.Memory[machine.AddressRegister + i] = machine.VRegisters[i]
 
     @staticmethod
     def opcode_format() -> str:
@@ -406,7 +413,8 @@ class StoreRegisters(Instruction):
 
 class LoadRegisters(Instruction):
     def execute(self, machine: Machine):
-        raise NotImplemented
+        for i in range(0, self.arg_registers[0] + 1):
+            machine.VRegisters[i] = machine.Memory[machine.AddressRegister + i]
 
     @staticmethod
     def opcode_format() -> str:
