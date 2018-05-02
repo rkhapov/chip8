@@ -45,7 +45,19 @@ class ConsoleScreen(Screen):
     def update(self):
         self._window.clear()
         self._draw_screen()
+        self._draw_borders()
         self._window.refresh()
+
+    def _draw_borders(self):
+        for i in range(self._height):
+            self._window.addch(i, self._width, '|')
+
+        for i in range(self._width):
+            self._window.addch(self._height, i, '-')
+
+        self._window.addch(self._height, self._width, '+')
+
+        self._window.addstr(self._height + 1, 0, 'CHIP-8')
 
     def _draw_screen(self):
         for y in range(0, self._height):
