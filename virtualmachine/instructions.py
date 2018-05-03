@@ -9,7 +9,6 @@ from random import randint
 class Cls(Instruction):
     def execute(self, machine: Machine):
         machine.Screen.clear()
-        machine.Screen.update()
 
     @staticmethod
     def opcode_format() -> str:
@@ -197,7 +196,7 @@ class AddRegisterToRegister(Instruction):
 class SubRegisterToRegister(Instruction):
     def execute(self, machine: Machine):
         sub = machine.VRegisters[self.arg_registers[0]] - machine.VRegisters[self.arg_registers[1]]
-        machine.VRegisters[0xF] = 0 if sub < 0 else 1
+        machine.VRegisters[0xF] = 1 if sub > 0 else 0
         machine.VRegisters[self.arg_registers[0]] = sub % 0x100
 
     @staticmethod
@@ -207,8 +206,8 @@ class SubRegisterToRegister(Instruction):
 
 class Shr(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = machine.VRegisters[self.arg_registers[1]] >> 1
-        machine.VRegisters[0xF] = machine.VRegisters[self.arg_registers[1]] % 2
+        machine.VRegisters[0xF] = machine.VRegisters[self.arg_registers[0]] % 2
+        machine.VRegisters[self.arg_registers[0]] = machine.VRegisters[self.arg_registers[0]] >> 1
 
     @staticmethod
     def opcode_format() -> str:
@@ -229,8 +228,8 @@ class Subn(Instruction):
 
 class Shl(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = (machine.VRegisters[self.arg_registers[1]] << 1) % 0x100
-        machine.VRegisters[0xF] = machine.VRegisters[self.arg_registers[1]] & 0X80 != 0
+        machine.VRegisters[0xF] = machine.VRegisters[self.arg_registers[0]] & 0X80 != 0
+        machine.VRegisters[self.arg_registers[0]] = (machine.VRegisters[self.arg_registers[0]] << 1) % 0x100
 
     @staticmethod
     def opcode_format() -> str:
@@ -239,10 +238,10 @@ class Shl(Instruction):
 
 class SkneRegisters(JumpInstruction):
     def execute(self, machine: Machine):
-        if machine.VRegisters[self.arg_registers[0]] == machine.VRegisters[self.arg_registers[1]]:
-            machine.PC += 2
-        else:
+        if machine.VRegisters[self.arg_registers[0]] != machine.VRegisters[self.arg_registers[1]]:
             machine.PC += 4
+        else:
+            machine.PC += 2
 
     @staticmethod
     def opcode_format() -> str:
@@ -283,19 +282,11 @@ class DrawSprite(Instruction):
         x = machine.VRegisters[self.arg_registers[0]]
 
         for i in range(self.arg_constant):
-            img = machine.Memory[machine.AddressRegister + i]
+            next8pixels = machine.Memory[machine.AddressRegister + i]
 
             for k in range(8):
-                pixel = (img & (1 << (7 - k))) >> (7 - k)
-                old_pixel = machine.Screen.get_pixel(y + i, x + k)
-                new_pixel = pixel ^ old_pixel
-
-                if old_pixel == 1 and new_pixel == 0:
-                    machine.VRegisters[0xF] = 1
-
-                machine.Screen.set_pixel(y + i, x + k, new_pixel)
-
-        machine.Screen.update()
+                pixel = (next8pixels & (1 << (7 - k))) >> (7 - k)
+                machine.VRegisters[0xF] = machine.Screen.set_pixel(y + i, x + k, pixel)
 
     @staticmethod
     def opcode_format() -> str:
@@ -304,8 +295,7 @@ class DrawSprite(Instruction):
 
 class SkipIfKeyPressed(JumpInstruction):
     def execute(self, machine: Machine):
-        machine.Keyboard.update_state()
-        key = hex(machine.VRegisters[self.arg_registers[0]])[2:]
+        key = machine.VRegisters[self.arg_registers[0]]
         if machine.Keyboard.is_key_pressed(key):
             machine.PC += 4
         else:
@@ -318,8 +308,7 @@ class SkipIfKeyPressed(JumpInstruction):
 
 class SkipIfKeyNotPressed(JumpInstruction):
     def execute(self, machine: Machine):
-        machine.Keyboard.update_state()
-        key = hex(machine.VRegisters[self.arg_registers[0]])[2:]
+        key = machine.VRegisters[self.arg_registers[0]]
         if not machine.Keyboard.is_key_pressed(key):
             machine.PC += 4
         else:
@@ -341,9 +330,14 @@ class GetDelayTimer(Instruction):
 
 class WaitKey(Instruction):
     def execute(self, machine: Machine):
-        while not machine.Keyboard.is_key_available():
-            machine.Keyboard.update_state()
-        machine.VRegisters[self.arg_registers[0]] = int(machine.Keyboard.get_pressed_key(), 16)
+        machine.Block = True
+
+        if not machine.Keyboard.is_key_pressed():
+            return
+
+        machine.VRegisters[self.arg_registers[0]] = machine.Keyboard.get_first_pressed()
+
+        machine.Block = False
 
     @staticmethod
     def opcode_format() -> str:
@@ -388,9 +382,12 @@ class LoadChar(Instruction):
 
 class Bcd(Instruction):
     def execute(self, machine: Machine):
-        hundreds = machine.Memory[self.arg_registers[0]] // 100
-        tens = (machine.Memory[self.arg_registers[0]] // 10) % 10
-        ones = machine.Memory[self.arg_registers[0]] % 10
+        value = machine.VRegisters[self.arg_registers[0]]
+        ones = value % 10
+        value //= 10
+        tens = value % 10
+        value //= 10
+        hundreds = value % 10
 
         machine.Memory[machine.AddressRegister] = 5 * hundreds
         machine.Memory[machine.AddressRegister + 1] = 5 * tens
