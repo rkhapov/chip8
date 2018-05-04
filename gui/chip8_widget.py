@@ -8,8 +8,8 @@ from virtualmachine.machine import Machine
 
 class Chip8Widget(QWidget):
 
-    pixel_width = 8
-    pixel_height = 8
+    pixel_width = 10
+    pixel_height = 10
 
     def __init__(self, machine: Machine):
         super().__init__()
