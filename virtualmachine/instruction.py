@@ -19,6 +19,12 @@ class Instruction:
     def opcode_format() -> str:
         raise NotImplemented
 
+    def vx(self):
+        return self.arg_registers[0]
+
+    def vy(self):
+        return self.arg_registers[1]
+
 
 # JumpInstruction - class to determinate instruction is instruction which change PC
 class JumpInstruction(Instruction):

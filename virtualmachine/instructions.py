@@ -90,7 +90,7 @@ class Jsr(JumpInstruction):
 
 class Skeq(JumpInstruction):
     def execute(self, machine: Machine):
-        if machine.VRegisters[self.arg_registers[0]] == self.arg_constant:
+        if machine.VRegisters[self.vx()] == self.arg_constant:
             machine.PC += 4
         else:
             machine.PC += 2
@@ -102,7 +102,7 @@ class Skeq(JumpInstruction):
 
 class Skne(JumpInstruction):
     def execute(self, machine: Machine):
-        if machine.VRegisters[self.arg_registers[0]] != self.arg_constant:
+        if machine.VRegisters[self.vx()] != self.arg_constant:
             machine.PC += 4
         else:
             machine.PC += 2
@@ -114,7 +114,7 @@ class Skne(JumpInstruction):
 
 class SkeqRegister(JumpInstruction):
     def execute(self, machine: Machine):
-        if machine.VRegisters[self.arg_registers[0]] == machine.VRegisters[self.arg_registers[1]]:
+        if machine.VRegisters[self.vx()] == machine.VRegisters[self.vy()]:
             machine.PC += 4
         else:
             machine.PC += 2
@@ -126,7 +126,7 @@ class SkeqRegister(JumpInstruction):
 
 class MovConstantToRegister(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = self.arg_constant
+        machine.VRegisters[self.vx()] = self.arg_constant
 
     @staticmethod
     def opcode_format() -> str:
@@ -135,8 +135,7 @@ class MovConstantToRegister(Instruction):
 
 class AddConstantToRegister(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = (self.arg_constant
-                                                     + machine.VRegisters[self.arg_registers[0]]) % 0x100
+        machine.VRegisters[self.vx()] = (self.arg_constant + machine.VRegisters[self.vx()]) % 0x100
 
     @staticmethod
     def opcode_format() -> str:
@@ -145,7 +144,7 @@ class AddConstantToRegister(Instruction):
 
 class MovRegisterToRegister(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = machine.VRegisters[self.arg_registers[1]]
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vy()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -154,8 +153,8 @@ class MovRegisterToRegister(Instruction):
 
 class Or(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = machine.VRegisters[self.arg_registers[0]] | \
-                                                    machine.VRegisters[self.arg_registers[1]]
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] \
+                                        | machine.VRegisters[self.vy()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -164,8 +163,8 @@ class Or(Instruction):
 
 class And(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = machine.VRegisters[self.arg_registers[0]] & \
-                                                    machine.VRegisters[self.arg_registers[1]]
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] & \
+                                        machine.VRegisters[self.vy()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -174,8 +173,8 @@ class And(Instruction):
 
 class Xor(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = machine.VRegisters[self.arg_registers[0]] ^ \
-                                                    machine.VRegisters[self.arg_registers[1]]
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] ^ \
+                                        machine.VRegisters[self.vy()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -184,9 +183,9 @@ class Xor(Instruction):
 
 class AddRegisterToRegister(Instruction):
     def execute(self, machine: Machine):
-        add = machine.VRegisters[self.arg_registers[0]] + machine.VRegisters[self.arg_registers[1]]
-        machine.VRegisters[0xF] = 0 if add < 0x100 else 1
-        machine.VRegisters[self.arg_registers[0]] = add % 0x100
+        add = machine.VRegisters[self.vx()] + machine.VRegisters[self.vy()]
+        machine.VRegisters[0xF] = add >> 8
+        machine.VRegisters[self.vx()] = add % 0x100
 
     @staticmethod
     def opcode_format() -> str:
@@ -195,9 +194,9 @@ class AddRegisterToRegister(Instruction):
 
 class SubRegisterToRegister(Instruction):
     def execute(self, machine: Machine):
-        sub = machine.VRegisters[self.arg_registers[0]] - machine.VRegisters[self.arg_registers[1]]
-        machine.VRegisters[0xF] = 1 if sub > 0 else 0
-        machine.VRegisters[self.arg_registers[0]] = sub % 0x100
+        sub = machine.VRegisters[self.vx()] - machine.VRegisters[self.vy()]
+        machine.VRegisters[0xF] = 1 if sub >= 0 else 0
+        machine.VRegisters[self.vx()] = sub % 0x100
 
     @staticmethod
     def opcode_format() -> str:
@@ -206,8 +205,8 @@ class SubRegisterToRegister(Instruction):
 
 class Shr(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[0xF] = machine.VRegisters[self.arg_registers[0]] % 2
-        machine.VRegisters[self.arg_registers[0]] = machine.VRegisters[self.arg_registers[0]] >> 1
+        machine.VRegisters[0xF] = machine.VRegisters[self.vx()] & 1
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] >> 1
 
     @staticmethod
     def opcode_format() -> str:
@@ -216,10 +215,9 @@ class Shr(Instruction):
 
 class Subn(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[0xF] = 1 if machine.VRegisters[self.arg_registers[1]] \
-                                       > machine.VRegisters[self.arg_registers[0]] else 0
-        machine.VRegisters[self.arg_registers[0]] = (machine.VRegisters[self.arg_registers[1]] -
-                                                     machine.VRegisters[self.arg_registers[0]]) % 0x100
+        sub = machine.VRegisters[self.vy()] - machine.VRegisters[self.vx()]
+        machine.VRegisters[0xF] = 1 if sub >= 0 else 0
+        machine.VRegisters[self.vx()] = sub % 0x100
 
     @staticmethod
     def opcode_format() -> str:
@@ -228,8 +226,8 @@ class Subn(Instruction):
 
 class Shl(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[0xF] = machine.VRegisters[self.arg_registers[0]] & 0X80 != 0
-        machine.VRegisters[self.arg_registers[0]] = (machine.VRegisters[self.arg_registers[0]] << 1) % 0x100
+        machine.VRegisters[0xF] = machine.VRegisters[self.vx()] >> 7
+        machine.VRegisters[self.vx()] = (machine.VRegisters[self.vx()] << 1) & 0xFF
 
     @staticmethod
     def opcode_format() -> str:
@@ -238,7 +236,7 @@ class Shl(Instruction):
 
 class SkneRegisters(JumpInstruction):
     def execute(self, machine: Machine):
-        if machine.VRegisters[self.arg_registers[0]] != machine.VRegisters[self.arg_registers[1]]:
+        if machine.VRegisters[self.vx()] != machine.VRegisters[self.vy()]:
             machine.PC += 4
         else:
             machine.PC += 2
@@ -268,7 +266,7 @@ class Jmi(JumpInstruction):
 
 class Rand(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = randint(0, 255) & self.arg_constant
+        machine.VRegisters[self.vx()] = randint(0, 255) & self.arg_constant
 
     @staticmethod
     def opcode_format() -> str:
@@ -278,15 +276,15 @@ class Rand(Instruction):
 class DrawSprite(Instruction):
     def execute(self, machine: Machine):
         machine.VRegisters[0xF] = 0
-        y = machine.VRegisters[self.arg_registers[1]]
-        x = machine.VRegisters[self.arg_registers[0]]
+        y = machine.VRegisters[self.vy()]
+        x = machine.VRegisters[self.vx()]
 
         for i in range(self.arg_constant):
             next8pixels = machine.Memory[machine.AddressRegister + i]
 
             for k in range(8):
                 pixel = (next8pixels & (1 << (7 - k))) >> (7 - k)
-                machine.VRegisters[0xF] = machine.Screen.set_pixel(y + i, x + k, pixel)
+                machine.VRegisters[0xF] |= machine.Screen.set_pixel(y + i, x + k, pixel)
 
     @staticmethod
     def opcode_format() -> str:
@@ -295,7 +293,7 @@ class DrawSprite(Instruction):
 
 class SkipIfKeyPressed(JumpInstruction):
     def execute(self, machine: Machine):
-        key = machine.VRegisters[self.arg_registers[0]]
+        key = machine.VRegisters[self.vx()]
         if machine.Keyboard.is_key_pressed(key):
             machine.PC += 4
         else:
@@ -308,7 +306,7 @@ class SkipIfKeyPressed(JumpInstruction):
 
 class SkipIfKeyNotPressed(JumpInstruction):
     def execute(self, machine: Machine):
-        key = machine.VRegisters[self.arg_registers[0]]
+        key = machine.VRegisters[self.vx()]
         if not machine.Keyboard.is_key_pressed(key):
             machine.PC += 4
         else:
@@ -321,7 +319,7 @@ class SkipIfKeyNotPressed(JumpInstruction):
 
 class GetDelayTimer(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.arg_registers[0]] = machine.DelayTimer.get_count()
+        machine.VRegisters[self.vx()] = machine.DelayTimer.get_count()
 
     @staticmethod
     def opcode_format() -> str:
@@ -332,10 +330,10 @@ class WaitKey(Instruction):
     def execute(self, machine: Machine):
         machine.Block = True
 
-        if not machine.Keyboard.is_key_pressed():
+        if not machine.Keyboard.is_any_key_pressed():
             return
 
-        machine.VRegisters[self.arg_registers[0]] = machine.Keyboard.get_first_pressed()
+        machine.VRegisters[self.vx()] = machine.Keyboard.get_first_pressed()
 
         machine.Block = False
 
@@ -346,7 +344,7 @@ class WaitKey(Instruction):
 
 class SetDelayTimer(Instruction):
     def execute(self, machine: Machine):
-        machine.DelayTimer.set_count(machine.VRegisters[self.arg_registers[0]])
+        machine.DelayTimer.set_count(machine.VRegisters[self.vx()])
 
     @staticmethod
     def opcode_format() -> str:
@@ -355,7 +353,7 @@ class SetDelayTimer(Instruction):
 
 class SetSoundTimer(Instruction):
     def execute(self, machine: Machine):
-        machine.SoundTimer.set_count(machine.VRegisters[self.arg_registers[0]])
+        machine.SoundTimer.set_count(machine.VRegisters[self.vx()])
 
     @staticmethod
     def opcode_format() -> str:
@@ -364,7 +362,7 @@ class SetSoundTimer(Instruction):
 
 class Adi(Instruction):
     def execute(self, machine: Machine):
-        machine.AddressRegister += machine.VRegisters[self.arg_registers[0]]
+        machine.AddressRegister += machine.VRegisters[self.vx()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -373,7 +371,7 @@ class Adi(Instruction):
 
 class LoadChar(Instruction):
     def execute(self, machine: Machine):
-        machine.AddressRegister = 5 * machine.VRegisters[self.arg_registers[0]]
+        machine.AddressRegister = machine.FontDict[machine.VRegisters[self.vx()]]
 
     @staticmethod
     def opcode_format() -> str:
@@ -382,16 +380,16 @@ class LoadChar(Instruction):
 
 class Bcd(Instruction):
     def execute(self, machine: Machine):
-        value = machine.VRegisters[self.arg_registers[0]]
+        value = machine.VRegisters[self.vx()]
         ones = value % 10
         value //= 10
         tens = value % 10
         value //= 10
         hundreds = value % 10
 
-        machine.Memory[machine.AddressRegister] = 5 * hundreds
-        machine.Memory[machine.AddressRegister + 1] = 5 * tens
-        machine.Memory[machine.AddressRegister + 2] = 5 * ones
+        machine.Memory[machine.AddressRegister] = machine.FontDict[hundreds]
+        machine.Memory[machine.AddressRegister + 1] = machine.FontDict[tens]
+        machine.Memory[machine.AddressRegister + 2] = machine.FontDict[ones]
 
     @staticmethod
     def opcode_format() -> str:
@@ -400,8 +398,9 @@ class Bcd(Instruction):
 
 class StoreRegisters(Instruction):
     def execute(self, machine: Machine):
-        for i in range(0, self.arg_registers[0] + 1):
-            machine.Memory[machine.AddressRegister + i] = machine.VRegisters[i]
+        for i in range(0, self.vx() + 1):
+            machine.Memory[machine.AddressRegister] = machine.VRegisters[i]
+            machine.AddressRegister += 1
 
     @staticmethod
     def opcode_format() -> str:
@@ -410,8 +409,9 @@ class StoreRegisters(Instruction):
 
 class LoadRegisters(Instruction):
     def execute(self, machine: Machine):
-        for i in range(0, self.arg_registers[0] + 1):
-            machine.VRegisters[i] = machine.Memory[machine.AddressRegister + i]
+        for i in range(0, self.vx() + 1):
+            machine.VRegisters[i] = machine.Memory[machine.AddressRegister]
+            machine.AddressRegister += 1
 
     @staticmethod
     def opcode_format() -> str:

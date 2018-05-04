@@ -405,37 +405,17 @@ class InstructionTests(unittest.TestCase):
         self.assertEqual(machine.PC, 0xAB + 0x111)
         self.assertTrue(isinstance(jmi, JumpInstruction))
 
-    @staticmethod
-    def _load_char_tests_cases():
-        yield 0x0, [0xf0, 0x90, 0x90, 0x90, 0xf0], '0'
-        yield 0x1, [0x20, 0x60, 0x20, 0x20, 0x70], '1'
-        yield 0x2, [0xf0, 0x10, 0xf0, 0x80, 0xf0], '2'
-        yield 0x3, [0xf0, 0x10, 0xf0, 0x10, 0xf0], '3'
-        yield 0x4, [0x90, 0x90, 0xf0, 0x10, 0x10], '4'
-        yield 0x5, [0xf0, 0x80, 0xf0, 0x10, 0xf0], '5'
-        yield 0x6, [0xf0, 0x80, 0xf0, 0x90, 0xf0], '6'
-        yield 0x7, [0xf0, 0x10, 0x20, 0x40, 0x40], '7'
-        yield 0x8, [0xf0, 0x90, 0xf0, 0x90, 0xf0], '8'
-        yield 0x9, [0xf0, 0x90, 0xf0, 0x10, 0xf0], '9'
-        yield 0xA, [0xf0, 0x90, 0xf0, 0x90, 0x90], '10'
-        yield 0xB, [0xe0, 0x90, 0xe0, 0x90, 0xe0], '11'
-        yield 0xC, [0xf0, 0x80, 0x80, 0x80, 0xf0], '12'
-        yield 0xD, [0xe0, 0x90, 0x90, 0x90, 0xe0], '13'
-        yield 0xE, [0xf0, 0x80, 0xf0, 0x80, 0xf0], '14'
-        yield 0xF, [0xf0, 0x80, 0xf0, 0x80, 0x80], '15'
-
     def test_load_char_should_set_right_address(self):
         machine = Machine()
 
         load = LoadChar()
         load.arg_registers.append(0x5)
 
-        for case in InstructionTests._load_char_tests_cases():
-            machine.VRegisters[0x5] = case[0]
+        for digit in range(16):
+            machine.VRegisters[5] = digit
             load.execute(machine)
 
-            for k in range(5):
-                self.assertEqual(machine.Memory[machine.AddressRegister + k], case[1][k], msg='sprite of ' + case[2])
+            self.assertEqual(machine.AddressRegister, machine.FontDict[digit])
 
     def test_skip_if_key_pressed_should_skip_if_key_flag_is_equal_to_1_anyway_nobody_reads_it(self):
         machine = Machine()
@@ -485,3 +465,67 @@ class InstructionTests(unittest.TestCase):
 
         self.assertEqual(machine.PC, 4)
 
+    def test_wait_key_blocks_machine(self):
+        machine = Machine()
+
+        wait = WaitKey()
+        wait.execute(machine)
+
+        self.assertTrue(machine.Block)
+
+    def test_wait_key_unblock_when_key_pressed_and_return_right_key(self):
+        machine = Machine()
+
+        wait = WaitKey()
+        wait.arg_registers.append(4)
+        wait.execute(machine)
+
+        machine.Keyboard.key_down(5)
+
+        wait.execute(machine)
+
+        self.assertEqual(machine.VRegisters[4], 5)
+        self.assertFalse(machine.Block)
+
+    def test_bcd_should_get_right_digits(self):
+        machine = Machine()
+        machine.VRegisters[7] = 107
+
+        bcd = Bcd()
+        bcd.arg_registers.append(7)
+
+        bcd.execute(machine)
+
+        self.assertEqual(machine.Memory[machine.AddressRegister], machine.FontDict[1])
+        self.assertEqual(machine.Memory[machine.AddressRegister + 1], machine.FontDict[0])
+        self.assertEqual(machine.Memory[machine.AddressRegister + 2], machine.FontDict[7])
+
+    def test_store_registers_should_store_and_increase_address_register(self):
+        machine = Machine()
+        for i in range(6):
+            machine.VRegisters[i] = i
+        machine.AddressRegister = 123
+
+        store = StoreRegisters()
+        store.arg_registers.append(5)
+
+        store.execute(machine)
+
+        for i in range(6):
+            self.assertEqual(machine.Memory[123 + i], machine.VRegisters[i])
+        self.assertEqual(machine.AddressRegister, 123 + 5 + 1)
+
+    def test_load_registers_should_load_registers_and_increase_address_register(self):
+        machine = Machine()
+        for i in range(6):
+            machine.Memory[123 + i] = i
+        machine.AddressRegister = 123
+
+        load = LoadRegisters()
+        load.arg_registers.append(5)
+
+        load.execute(machine)
+
+        for i in range(6):
+            self.assertEqual(machine.VRegisters[i], machine.Memory[123 + i])
+        self.assertEqual(machine.AddressRegister, 123 + 5 + 1)

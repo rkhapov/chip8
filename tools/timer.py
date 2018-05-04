@@ -35,4 +35,8 @@ class Timer:
     def get_count(self):
         return self._count
 
+    def set_interval(self, interval):
+        self._interval = interval
 
+    def get_interval(self):
+        return self._interval

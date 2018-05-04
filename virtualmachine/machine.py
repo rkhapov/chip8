@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from virtualmachine.timer import Timer
+from tools.timer import Timer
 
 
 class Stack:
@@ -104,10 +104,10 @@ class Machine:
         self.ExitCode = None
         self.DelayTimer = Timer()
         self.SoundTimer = Timer()
-        self.SoundTimer.add_handler(self.make_sound)
         self.DelayTimer.start()
         self.SoundTimer.start()
         self.Block = False
+        self.FontDict = Machine._create_font_dict()
 
         import parser.instruction_factory
         self._instruction_factory = parser.instruction_factory.InstructionFactory()
@@ -124,9 +124,6 @@ class Machine:
         self.ExitCode = None
         self.DelayTimer.set_count(0)
         self.SoundTimer.set_count(0)
-
-    def make_sound(self):
-        pass
 
     def execute_next_instruction(self):
         if self._instruction_executing:
@@ -195,3 +192,12 @@ class Machine:
             memory[i] = Machine._standard_sprites[i]
 
         return memory
+
+    @staticmethod
+    def _create_font_dict():
+        font = {}
+
+        for i in range(16):
+            font[i] = i * 5
+
+        return font
