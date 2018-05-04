@@ -304,9 +304,9 @@ class InstructionTests(unittest.TestCase):
 
         shr.execute(machine)
 
-        self.assertEqual(machine.VRegisters[0xA], 0xFF >> 1)
+        self.assertEqual(machine.VRegisters[0xA], 0xFA >> 1)
         self.assertEqual(machine.VRegisters[0xB], 0xFF)
-        self.assertEqual(machine.VRegisters[0xF], 1)
+        self.assertEqual(machine.VRegisters[0xF], 0)
 
     def test_subn_should_set_vf_if_vy_greater_vx(self):
         machine = Machine()
@@ -349,7 +349,7 @@ class InstructionTests(unittest.TestCase):
 
         shl.execute(machine)
 
-        self.assertEqual(machine.VRegisters[0xA], (0xFF << 1) % 0x100)
+        self.assertEqual(machine.VRegisters[0xA], (0xFA << 1) % 0x100)
         self.assertEqual(machine.VRegisters[0xB], 0xFF)
         self.assertEqual(machine.VRegisters[0xF], 1)
 
@@ -405,6 +405,83 @@ class InstructionTests(unittest.TestCase):
         self.assertEqual(machine.PC, 0xAB + 0x111)
         self.assertTrue(isinstance(jmi, JumpInstruction))
 
+    @staticmethod
+    def _load_char_tests_cases():
+        yield 0x0, [0xf0, 0x90, 0x90, 0x90, 0xf0], '0'
+        yield 0x1, [0x20, 0x60, 0x20, 0x20, 0x70], '1'
+        yield 0x2, [0xf0, 0x10, 0xf0, 0x80, 0xf0], '2'
+        yield 0x3, [0xf0, 0x10, 0xf0, 0x10, 0xf0], '3'
+        yield 0x4, [0x90, 0x90, 0xf0, 0x10, 0x10], '4'
+        yield 0x5, [0xf0, 0x80, 0xf0, 0x10, 0xf0], '5'
+        yield 0x6, [0xf0, 0x80, 0xf0, 0x90, 0xf0], '6'
+        yield 0x7, [0xf0, 0x10, 0x20, 0x40, 0x40], '7'
+        yield 0x8, [0xf0, 0x90, 0xf0, 0x90, 0xf0], '8'
+        yield 0x9, [0xf0, 0x90, 0xf0, 0x10, 0xf0], '9'
+        yield 0xA, [0xf0, 0x90, 0xf0, 0x90, 0x90], '10'
+        yield 0xB, [0xe0, 0x90, 0xe0, 0x90, 0xe0], '11'
+        yield 0xC, [0xf0, 0x80, 0x80, 0x80, 0xf0], '12'
+        yield 0xD, [0xe0, 0x90, 0x90, 0x90, 0xe0], '13'
+        yield 0xE, [0xf0, 0x80, 0xf0, 0x80, 0xf0], '14'
+        yield 0xF, [0xf0, 0x80, 0xf0, 0x80, 0x80], '15'
 
+    def test_load_char_should_set_right_address(self):
+        machine = Machine()
 
+        load = LoadChar()
+        load.arg_registers.append(0x5)
+
+        for case in InstructionTests._load_char_tests_cases():
+            machine.VRegisters[0x5] = case[0]
+            load.execute(machine)
+
+            for k in range(5):
+                self.assertEqual(machine.Memory[machine.AddressRegister + k], case[1][k], msg='sprite of ' + case[2])
+
+    def test_skip_if_key_pressed_should_skip_if_key_flag_is_equal_to_1_anyway_nobody_reads_it(self):
+        machine = Machine()
+        machine.Keyboard.key_down(4)
+        machine.VRegisters[5] = 4
+
+        skip = SkipIfKeyPressed()
+        skip.arg_registers.append(5)
+
+        skip.execute(machine)
+
+        self.assertEqual(machine.PC, 4)
+
+    def test_skip_if_key_pressed_should_not_skip_if_key_flag_is_equal_to_0(self):
+        machine = Machine()
+        machine.Keyboard.key_down(7)
+        machine.VRegisters[5] = 4
+
+        skip = SkipIfKeyPressed()
+        skip.arg_registers.append(5)
+
+        skip.execute(machine)
+
+        self.assertEqual(machine.PC, 2)
+
+    def test_skip_if_not_pressed_should_not_skip_if_key_pressed(self):
+        machine = Machine()
+        machine.Keyboard.key_down(3)
+        machine.VRegisters[8] = 3
+
+        skip = SkipIfKeyNotPressed()
+        skip.arg_registers.append(8)
+
+        skip.execute(machine)
+
+        self.assertEqual(machine.PC, 2)
+
+    def test_skip_if_not_pressed_should_skip_if_key_not_pressed(self):
+        machine = Machine()
+        machine.Keyboard.key_down(8)
+        machine.VRegisters[8] = 3
+
+        skip = SkipIfKeyNotPressed()
+        skip.arg_registers.append(8)
+
+        skip.execute(machine)
+
+        self.assertEqual(machine.PC, 4)
 
