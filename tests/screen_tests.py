@@ -51,4 +51,4 @@ class ScreenTests(unittest.TestCase):
         screen = Screen()
         screen.set_pixel(55, 55, 1)
 
-        self.assertEqual(screen.get_pixel(55 % 64, 55 % 32), 1)
+        self.assertEqual(screen.get_pixel(55 % 32, 55 % 64), 1)

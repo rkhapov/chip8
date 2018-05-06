@@ -5,6 +5,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 from gui.chip8_widget import *
+from gui.chip8_debug_widget import *
 
 
 def main():

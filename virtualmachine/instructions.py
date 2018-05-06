@@ -195,7 +195,7 @@ class AddRegisterToRegister(Instruction):
 class SubRegisterToRegister(Instruction):
     def execute(self, machine: Machine):
         sub = machine.VRegisters[self.vx()] - machine.VRegisters[self.vy()]
-        machine.VRegisters[0xF] = 1 if sub >= 0 else 0
+        machine.VRegisters[0xF] = 1 if sub > 0 else 0
         machine.VRegisters[self.vx()] = sub % 0x100
 
     @staticmethod
@@ -216,7 +216,7 @@ class Shr(Instruction):
 class Subn(Instruction):
     def execute(self, machine: Machine):
         sub = machine.VRegisters[self.vy()] - machine.VRegisters[self.vx()]
-        machine.VRegisters[0xF] = 1 if sub >= 0 else 0
+        machine.VRegisters[0xF] = 1 if sub > 0 else 0
         machine.VRegisters[self.vx()] = sub % 0x100
 
     @staticmethod
@@ -380,12 +380,7 @@ class LoadChar(Instruction):
 
 class Bcd(Instruction):
     def execute(self, machine: Machine):
-        value = machine.VRegisters[self.vx()]
-        ones = value % 10
-        value //= 10
-        tens = value % 10
-        value //= 10
-        hundreds = value % 10
+        hundreds, tens, ones = map(int, str(machine.VRegisters[self.vx()]).zfill(3))
 
         machine.Memory[machine.AddressRegister] = machine.FontDict[hundreds]
         machine.Memory[machine.AddressRegister + 1] = machine.FontDict[tens]

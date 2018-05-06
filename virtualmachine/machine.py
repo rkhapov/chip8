@@ -11,9 +11,7 @@ class Stack:
         if self.size() == 0:
             raise RuntimeError('Pop from empty stack')
 
-        ret = self.top()
-        self._stack.pop()
-        return ret
+        return self._stack.pop()
 
     def push(self, value):
         self._stack.append(value)
@@ -74,11 +72,9 @@ class Screen:
         y = y % self._height
         x = x % self._width
 
-        old_value = self._screen[y][x]
-        new_value = self._screen[y][x] ^ value
-        self._screen[y][x] = new_value
+        self._screen[y][x] ^= value
 
-        return old_value == 1 and new_value == 0  # return 1 if collision
+        return value == 1 and self._screen[y][x] == 0  # return 1 if collision
 
     def get_pixel(self, y, x):
         y = y % self._height

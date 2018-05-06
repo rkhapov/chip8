@@ -20,10 +20,10 @@ class Instruction:
         raise NotImplemented
 
     def vx(self):
-        return self.arg_registers[0]
+        return self.arg_registers[0] if len(self.arg_registers) >= 1 else None
 
     def vy(self):
-        return self.arg_registers[1]
+        return self.arg_registers[1] if len(self.arg_registers) >= 2 else None
 
 
 # JumpInstruction - class to determinate instruction is instruction which change PC

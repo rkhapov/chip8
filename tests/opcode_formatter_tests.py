@@ -32,7 +32,8 @@ class OpcodeFormatterTests(unittest.TestCase):
         self.assertRaises(OpcodeFormatError, parse_action, bytearray([0xBB, 0xC2]), 'NNN1')
         self.assertRaises(OpcodeFormatError, parse_action, bytearray([0xBB, 0x32]), 'NN12')
 
-    def _parse_by_format_tests(self):
+    @staticmethod
+    def _parse_by_format_tests():
         of = OpcodeFormatter()
 
         yield of.parse_by_format(bytearray([0x21, 0x11]), '2111'), []
@@ -60,11 +61,14 @@ class OpcodeFormatterTests(unittest.TestCase):
         yield of.parse_by_format(bytearray([0xAC, 0xAB]), 'NNAN'), [OpcodeUnit(OpcodeUnitType.CONSTANT, 0xAC),
                                                                     OpcodeUnit(OpcodeUnitType.CONSTANT, 0xB)]
 
+        yield of.parse_by_format(bytearray([0x7C, 0xAB]), '7xNN'), [OpcodeUnit(OpcodeUnitType.REGISTER, 0xC),
+                                                                    OpcodeUnit(OpcodeUnitType.CONSTANT, 0xAB)]
+
         yield of.parse_by_format(bytearray([0xAC, 0xAB]), 'XYXY'), [OpcodeUnit(OpcodeUnitType.REGISTER, 0xA),
                                                                     OpcodeUnit(OpcodeUnitType.REGISTER, 0xC),
                                                                     OpcodeUnit(OpcodeUnitType.REGISTER, 0xA),
                                                                     OpcodeUnit(OpcodeUnitType.REGISTER, 0xB)]
 
     def test_parse_by_format_should_return_right_units(self):
-        for test in self._parse_by_format_tests():
+        for test in OpcodeFormatterTests._parse_by_format_tests():
             self.assertListEqual(test[1], test[0])
