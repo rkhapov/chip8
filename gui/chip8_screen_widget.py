@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from PyQt5.QtGui import QPainter, QColor
 from PyQt5.QtWidgets import QWidget, QDesktopWidget
 
@@ -16,7 +18,7 @@ class Chip8ScreenWidget(QWidget):
 
         self.init_ui()
 
-        self._draw_timer = Timer(count=255, interval=1.0 / 60)
+        self._draw_timer = Timer(interval=1.0 / 60)
         self._draw_timer.add_handler(self._draw_screen_event)
         self._draw_timer.start()
 
@@ -32,7 +34,6 @@ class Chip8ScreenWidget(QWidget):
         qp.end()
 
     def _draw_screen_event(self):
-        self._draw_timer.set_count(255)  # infinity loop
         self.update()
 
     def _draw_screen(self, qp):

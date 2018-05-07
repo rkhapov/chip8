@@ -24,51 +24,6 @@ class Rts(JumpInstruction):
         return '00EE'
 
 
-class Scdown(Instruction):
-    def execute(self, machine: Machine):
-        raise NotImplemented
-
-    @staticmethod
-    def opcode_format() -> str:
-        return '00CN'
-
-
-class Scright(Instruction):
-    def execute(self, machine: Machine):
-        raise NotImplemented
-
-    @staticmethod
-    def opcode_format() -> str:
-        return '00FB'
-
-
-class Scleft(Instruction):
-    def execute(self, machine: Machine):
-        raise NotImplemented
-
-    @staticmethod
-    def opcode_format() -> str:
-        return '00FC'
-
-
-class Low(Instruction):
-    def execute(self, machine: Machine):
-        raise NotImplemented
-
-    @staticmethod
-    def opcode_format() -> str:
-        return '00FE'
-
-
-class High(Instruction):
-    def execute(self, machine: Machine):
-        raise NotImplemented
-
-    @staticmethod
-    def opcode_format() -> str:
-        return '00FF'
-
-
 class Jmp(JumpInstruction):
     def execute(self, machine: Machine):
         machine.PC = self.arg_constant

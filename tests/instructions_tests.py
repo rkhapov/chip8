@@ -529,3 +529,34 @@ class InstructionTests(unittest.TestCase):
         for i in range(6):
             self.assertEqual(machine.VRegisters[i], machine.Memory[123 + i])
         self.assertEqual(machine.AddressRegister, 123 + 5 + 1)
+
+    def test_set_delay_timer(self):
+        machine = Machine()
+        machine.VRegisters[0xC] = 150
+
+        set_delay = SetDelayTimer()
+        set_delay.arg_registers.append(0xC)
+        set_delay.execute(machine)
+
+        self.assertEqual(machine.DelayTimer.get_count(), 150)
+
+    def test_set_sound_timer(self):
+        machine = Machine()
+        machine.VRegisters[0xC] = 150
+
+        set_sound = SetSoundTimer()
+        set_sound.arg_registers.append(0xC)
+        set_sound.execute(machine)
+
+        self.assertEqual(machine.SoundTimer.get_count(), 150)
+
+    def test_get_delay_timer(self):
+        machine = Machine()
+        machine.DelayTimer.set_count(228)
+        machine.VRegisters[0xC] = 150
+
+        set_delay = GetDelayTimer()
+        set_delay.arg_registers.append(0xC)
+        set_delay.execute(machine)
+
+        self.assertEqual(machine.VRegisters[0xC], 228)

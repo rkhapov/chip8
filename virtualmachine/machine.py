@@ -1,90 +1,9 @@
 #!/usr/bin/env python3
 
-from tools.timer import Timer
-
-
-class Stack:
-    def __init__(self):
-        self._stack = []
-
-    def pop(self):
-        if self.size() == 0:
-            raise RuntimeError('Pop from empty stack')
-
-        return self._stack.pop()
-
-    def push(self, value):
-        self._stack.append(value)
-
-    def size(self):
-        return len(self._stack)
-
-    def top(self):
-        if self.size() == 0:
-            raise RuntimeError('top from empty stack')
-
-        return self._stack[self.size() - 1]
-
-
-class Keyboard:
-    def __init__(self):
-        self._keys = [0] * 16
-
-    def key_down(self, key: int):
-        self._keys[key] = True
-
-    def key_up(self, key: int):
-        self._keys[key] = False
-
-    def is_key_pressed(self, key: int):
-        return self._keys[key]
-
-    def get_first_pressed(self):
-        for key in range(16):
-            if self._keys[key]:
-                return key
-        return None
-
-    def is_any_key_pressed(self):
-        for key in self._keys:
-            if key:
-                return True
-        return False
-
-
-class Screen:
-    def __init__(self, height=32, width=64):
-        self._screen = []
-        self._height = height
-        self._width = width
-        for i in range(self._height):
-            self._screen.append([0] * self._width)
-
-    def height(self):
-        return self._height
-
-    def width(self):
-        return self._width
-
-    def set_pixel(self, y, x, value):
-        if value != 0 and value != 1:
-            raise ValueError('Pixel value should be 1 or 0')
-        y = y % self._height
-        x = x % self._width
-
-        self._screen[y][x] ^= value
-
-        return value == 1 and self._screen[y][x] == 0  # return 1 if collision
-
-    def get_pixel(self, y, x):
-        y = y % self._height
-        x = x % self._width
-        return self._screen[y][x]
-
-    def clear(self):
-        for y in range(self._height):
-            for x in range(self._width):
-                self._screen[y][x] = 0
+from virtualmachine.timer import Timer
+from virtualmachine.stack import Stack
+from virtualmachine.keyboard import Keyboard
+from virtualmachine.screen import Screen
 
 
 class Machine:
@@ -98,10 +17,8 @@ class Machine:
         self.VRegisters = bytearray(16)
         self.AddressRegister = 0
         self.ExitCode = None
-        self.DelayTimer = Timer()
-        self.SoundTimer = Timer()
-        self.DelayTimer.start()
-        self.SoundTimer.start()
+        self.DelayTimer = Timer(0)
+        self.SoundTimer = Timer(0)
         self.Block = False
         self.FontDict = Machine._create_font_dict()
 
@@ -133,8 +50,6 @@ class Machine:
 
         instruction = self._get_next_instruction()
         instruction.execute(self)
-
-        # print(instruction.__class__.__name__, instruction.arg_constant, instruction.arg_registers)
 
         from virtualmachine.instruction import JumpInstruction
         if not isinstance(instruction, JumpInstruction) and not self.Block:
