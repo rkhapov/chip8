@@ -22,3 +22,7 @@ class Stack:
             raise RuntimeError('top from empty stack')
 
         return self._stack[self.size() - 1]
+
+    def items(self):
+        for i in range(self.size() - 1, -1, -1):
+            yield self._stack[i]

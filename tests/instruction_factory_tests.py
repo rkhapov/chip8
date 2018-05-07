@@ -12,13 +12,6 @@ class InstructionFactoryTests(unittest.TestCase):
     def _from_opcode_tests_cases():
         yield bytearray([0x00, 0xE0]), Cls, None, [], 'cls'
         yield bytearray([0x00, 0xEE]), Rts, None, [], 'rts'
-        yield bytearray([0x00, 0xCA]), Scdown, 0xA, [], 'scdown 1'
-        yield bytearray([0x00, 0xC0]), Scdown, 0x0, [], 'scdown 2'
-        yield bytearray([0x00, 0xC3]), Scdown, 0x3, [], 'scdown 3'
-        yield bytearray([0x00, 0xFB]), Scright, None, [], 'scright'
-        yield bytearray([0x00, 0xFC]), Scleft, None, [], 'scleft'
-        yield bytearray([0x00, 0xFE]), Low, None, [], 'low'
-        yield bytearray([0x00, 0xFF]), High, None, [], 'high'
         yield bytearray([0x10, 0xFF]), Jmp, 0x0FF, [], 'jmp1'
         yield bytearray([0x12, 0xFF]), Jmp, 0x2FF, [], 'jmp2'
         yield bytearray([0x12, 0xB1]), Jmp, 0x2B1, [], 'jmp3'

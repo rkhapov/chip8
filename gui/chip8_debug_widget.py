@@ -17,9 +17,9 @@ class Chip8DebugWidget(QWidget):
         self.init_ui()
         self._sound = QSound('beep.wav')
 
-        self._machine_update_timer = Timer(count=255, interval=1.0 / 7000)
-        self._machine_update_timer.add_handler(self._update_machine)
-        self._machine_update_timer.start()
+        self._update_timer = Timer(interval=1.0 / 60)
+        self._update_timer.add_handler(self._update)
+        self._update_timer.start()
 
         self._key_dict = {
             Qt.Key_1: 1, Qt.Key_2: 2, Qt.Key_3: 3, Qt.Key_4: 0xC,
@@ -36,6 +36,9 @@ class Chip8DebugWidget(QWidget):
         self.setWindowTitle('Chip 8')
         self.setFocus()
         self.show()
+
+    def _update(self):
+        self.update()
 
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         if event.key() in self._key_dict:
