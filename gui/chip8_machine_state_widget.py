@@ -12,26 +12,28 @@ def to_hex(i: int) -> str:
 
 
 class Chip8MachineStateWidget(QWidget):
-
-    def __init__(self, machine: Machine):
-        super().__init__()
+    def __init__(self, machine: Machine, parent: QWidget=None):
+        super().__init__(parent)
         self._machine = machine
 
         self._init_ui()
 
-        self._draw_timer = Timer(interval=1.0 / 60)
+        self._draw_timer = Timer(interval=1.0 / 30)
         self._draw_timer.add_handler(self._draw_state_event)
         self._draw_timer.start()
+
+        from parser.instruction_factory import InstructionFactory
+        self._instruction_factory = InstructionFactory()
 
     def _init_ui(self):
         screen_size = QDesktopWidget().screenGeometry(-1)
         self._pixel_width = int(screen_size.width() * 1 / 100)
         self._pixel_height = self._pixel_width
 
-        self.setFixedHeight(self._pixel_height * 75)
-        self.setFixedWidth(self._pixel_width * 45)
+        self.setFixedHeight(self._pixel_height * 32)
+        self.setFixedWidth(self._pixel_width * 35)
 
-        self._text_size = int(self._pixel_height * 0.85)
+        self._text_size = int(self._pixel_height * 0.7)
 
         self.show()
 
@@ -43,11 +45,12 @@ class Chip8MachineStateWidget(QWidget):
 
         qp.end()
 
-    def keyPressEvent(self, a0: QtGui.QKeyEvent):
-        self._machine.execute_next_instruction()
-
     def _draw_state_event(self):
         self.update()
+
+    def keyPressEvent(self, a0: QtGui.QKeyEvent):
+        self.parent().keyPressEvent(a0)
+        self._machine.execute_next_instruction()
 
     def _draw_state(self, qp):
         qp.setFont(QFont('Noto Sans', self._text_size))
@@ -59,3 +62,34 @@ class Chip8MachineStateWidget(QWidget):
                             to_hex(self._machine.DelayTimer.get_count()),
                             to_hex(self._machine.SoundTimer.get_count())))
         qp.drawText(0, 3 * self._text_size + 10, 'Stack: {}'.format(list(map(to_hex, self._machine.Stack.items()))))
+        qp.drawText(0, 4 * self._text_size + 15, 'Memory at 10-radius of PC:')
+
+        y = 5 * self._text_size + 20
+
+        for i in range(-10, 11):
+            index = self._machine.PC + i * 2
+
+            if index < 0 or index > self._machine.MemorySize:
+                qp.drawText(0, y, '')
+
+            opcode = self._get_opcode_at(index)
+            try:
+                instruction = self._instruction_factory.from_opcode(opcode)
+
+                qp.drawText(0, y, '{}{} : {}, {} {} {}'
+                            .format('-> ' if i == 0 else '    ',
+                                    to_hex(index),
+                                    list(map(to_hex, opcode)),
+                                    instruction.__class__.__name__,
+                                    list((map(to_hex, instruction.arg_registers))),
+                                    to_hex(instruction.arg_constant)))
+            except:
+                qp.drawText(0, y, '{}{} : {}, [unknown]'
+                            .format('-> ' if i == 0 else '    ',
+                                    to_hex(index),
+                                    list(map(to_hex, opcode))))
+
+            y += self._text_size + 5
+
+    def _get_opcode_at(self, i):
+        return bytearray([self._machine.Memory[i], self._machine.Memory[i + 1]])

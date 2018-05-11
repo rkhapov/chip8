@@ -337,9 +337,9 @@ class Bcd(Instruction):
     def execute(self, machine: Machine):
         hundreds, tens, ones = map(int, str(machine.VRegisters[self.vx()]).zfill(3))
 
-        machine.Memory[machine.AddressRegister] = machine.FontDict[hundreds]
-        machine.Memory[machine.AddressRegister + 1] = machine.FontDict[tens]
-        machine.Memory[machine.AddressRegister + 2] = machine.FontDict[ones]
+        machine.Memory[machine.AddressRegister] = hundreds
+        machine.Memory[machine.AddressRegister + 1] = tens
+        machine.Memory[machine.AddressRegister + 2] = ones
 
     @staticmethod
     def opcode_format() -> str:

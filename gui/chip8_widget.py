@@ -17,7 +17,7 @@ class Chip8Widget(QWidget):
         self.init_ui()
         self._sound = QSound('beep.wav')
 
-        self._machine_update_timer = Timer(interval=1.0 / 10000)
+        self._machine_update_timer = Timer(interval=1.0 / 6000)
         self._machine_update_timer.add_handler(self._execute_instruction)
         self._machine_update_timer.start()
 
@@ -33,8 +33,7 @@ class Chip8Widget(QWidget):
         }
 
     def init_ui(self):
-        screen = Chip8ScreenWidget(self._machine.Screen)
-        screen.setParent(self)
+        screen = Chip8ScreenWidget(self._machine.Screen, self)
         self.setWindowTitle('Chip 8')
         self.show()
 

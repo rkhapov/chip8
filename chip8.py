@@ -4,9 +4,10 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 
-from gui.chip8_widget import *
 from gui.chip8_debug_widget import *
 from gui.chip8_machine_state_widget import Chip8MachineStateWidget
+from gui.chip8_widget import Chip8Widget
+
 
 def main():
     if len(sys.argv) < 2:
@@ -17,7 +18,7 @@ def main():
     machine.load_program(sys.argv[1])
 
     app = QApplication(sys.argv)
-    chip8 = Chip8MachineStateWidget(machine)
+    chip8 = Chip8Widget(machine)
     return app.exec_()
 
 
