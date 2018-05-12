@@ -2,24 +2,11 @@
 
 import sys
 
-from PyQt5.QtWidgets import QApplication
-
-from gui.chip8_debug_widget import *
-from gui.chip8_machine_state_widget import Chip8MachineStateWidget
-from gui.chip8_widget import Chip8Widget
+from run_conf import RunConfiguration
 
 
 def main():
-    if len(sys.argv) < 2:
-        print('Expected program filename')
-        return 1
-
-    machine = Machine()
-    machine.load_program(sys.argv[1])
-
-    app = QApplication(sys.argv)
-    chip8 = Chip8Widget(machine)
-    return app.exec_()
+    return RunConfiguration.from_args().run()
 
 
 if __name__ == "__main__":

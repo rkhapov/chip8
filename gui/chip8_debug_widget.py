@@ -12,11 +12,12 @@ from virtualmachine.machine import Machine
 
 class Chip8DebugWidget(QWidget):
 
-    def __init__(self, machine: Machine):
+    def __init__(self, machine: Machine, sound: bool=False):
         super().__init__()
         self._machine = machine
         self.init_ui()
         self._sound = QSound('beep.wav')
+        self._sound_support = sound
 
         self._executed_number = 0
 
@@ -42,7 +43,6 @@ class Chip8DebugWidget(QWidget):
             self._machine.Keyboard.key_down(self._key_dict[event.key()])
 
         if event.key() == Qt.Key_Space:
-            print('execute')
             self._execute_instruction()
 
     def keyReleaseEvent(self, event: QtGui.QKeyEvent):
@@ -50,7 +50,6 @@ class Chip8DebugWidget(QWidget):
             self._machine.Keyboard.key_up(self._key_dict[event.key()])
 
     def _execute_instruction(self):
-        print('execute')
         self._machine.execute_next_instruction()
         self._update_sound_delay()
         self._executed_number += 1
@@ -59,7 +58,7 @@ class Chip8DebugWidget(QWidget):
         if self._executed_number % 10 != 0:
             return
 
-        if self._machine.SoundTimer.get_count() != 0:
+        if self._machine.SoundTimer.get_count() != 0 and self._sound_support:
             self._sound.play()
         self._machine.DelayTimer.decrease()
         self._machine.SoundTimer.decrease()

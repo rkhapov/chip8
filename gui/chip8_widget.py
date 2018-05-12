@@ -11,11 +11,12 @@ from virtualmachine.machine import Machine
 
 class Chip8Widget(QWidget):
 
-    def __init__(self, machine: Machine):
+    def __init__(self, machine: Machine, sound: bool=False):
         super().__init__()
         self._machine = machine
         self.init_ui()
         self._sound = QSound('beep.wav')
+        self._sound_support = sound
 
         self._machine_update_timer = Timer(interval=1.0 / 6000)
         self._machine_update_timer.add_handler(self._execute_instruction)
@@ -49,7 +50,7 @@ class Chip8Widget(QWidget):
         self._machine.execute_next_instruction()
 
     def _update_sound_delay(self):
-        if self._machine.SoundTimer.get_count() != 0:
+        if self._machine.SoundTimer.get_count() != 0 and self._sound_support:
             self._sound.play()
         self._machine.DelayTimer.decrease()
         self._machine.SoundTimer.decrease()
