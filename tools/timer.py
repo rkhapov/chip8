@@ -10,6 +10,8 @@ class Timer:
         self._interval = interval
         self._thread = threading.Thread(target=self._tick_event, daemon=True)
 
+        self._in_handing = False
+
     def start(self):
         if not self._thread.is_alive():
             self._thread.start()
@@ -21,8 +23,13 @@ class Timer:
         while True:
             time.sleep(self._interval)
 
+            if self._in_handing:
+                continue
+
+            self._in_handing = True
             for tick in self._tick:
                 tick()
+            self._in_handing = False
 
     def set_interval(self, interval):
         self._interval = interval

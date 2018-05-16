@@ -108,8 +108,7 @@ class MovRegisterToRegister(Instruction):
 
 class Or(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] \
-                                        | machine.VRegisters[self.vy()]
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] | machine.VRegisters[self.vy()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -118,8 +117,7 @@ class Or(Instruction):
 
 class And(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] & \
-                                        machine.VRegisters[self.vy()]
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] & machine.VRegisters[self.vy()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -128,8 +126,7 @@ class And(Instruction):
 
 class Xor(Instruction):
     def execute(self, machine: Machine):
-        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] ^ \
-                                        machine.VRegisters[self.vy()]
+        machine.VRegisters[self.vx()] = machine.VRegisters[self.vx()] ^ machine.VRegisters[self.vy()]
 
     @staticmethod
     def opcode_format() -> str:
@@ -139,7 +136,7 @@ class Xor(Instruction):
 class AddRegisterToRegister(Instruction):
     def execute(self, machine: Machine):
         add = machine.VRegisters[self.vx()] + machine.VRegisters[self.vy()]
-        machine.VRegisters[0xF] = add >> 8
+        machine.VRegisters[0xF] = add >= 0x100
         machine.VRegisters[self.vx()] = add % 0x100
 
     @staticmethod
@@ -230,6 +227,9 @@ class Rand(Instruction):
 
 class DrawSprite(Instruction):
     def execute(self, machine: Machine):
+        def get_bit(n, i):
+            return (n & (1 << i)) >> i
+
         machine.VRegisters[0xF] = 0
         y = machine.VRegisters[self.vy()]
         x = machine.VRegisters[self.vx()]
@@ -238,7 +238,7 @@ class DrawSprite(Instruction):
             next8pixels = machine.Memory[machine.AddressRegister + i]
 
             for k in range(8):
-                pixel = (next8pixels & (1 << (7 - k))) >> (7 - k)
+                pixel = get_bit(next8pixels, 7 - k)
                 machine.VRegisters[0xF] |= machine.Screen.set_pixel(y + i, x + k, pixel)
 
     @staticmethod

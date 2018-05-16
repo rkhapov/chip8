@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QWidget, QDesktopWidget, QLabel
 
 from tools.timer import Timer
 from virtualmachine.machine import Machine
+from parser.instruction_factory import *
 
 
 def to_hex(i: int) -> str:
@@ -22,7 +23,6 @@ class Chip8MachineStateWidget(QWidget):
         self._draw_timer.add_handler(self._draw_state_event)
         self._draw_timer.start()
 
-        from parser.instruction_factory import InstructionFactory
         self._instruction_factory = InstructionFactory()
 
     def _init_ui(self):
@@ -50,7 +50,6 @@ class Chip8MachineStateWidget(QWidget):
 
     def keyPressEvent(self, a0: QtGui.QKeyEvent):
         self.parent().keyPressEvent(a0)
-        self._machine.execute_next_instruction()
 
     def _draw_state(self, qp):
         qp.setFont(QFont('Noto Sans', self._text_size))
@@ -71,8 +70,10 @@ class Chip8MachineStateWidget(QWidget):
 
             if index < 0 or index > self._machine.MemorySize:
                 qp.drawText(0, y, '')
+                continue
 
             opcode = self._get_opcode_at(index)
+
             try:
                 instruction = self._instruction_factory.from_opcode(opcode)
 
@@ -82,14 +83,16 @@ class Chip8MachineStateWidget(QWidget):
                                     list(map(to_hex, opcode)),
                                     instruction.__class__.__name__,
                                     list((map(to_hex, instruction.arg_registers))),
-                                    to_hex(instruction.arg_constant)))
-            except:
+                                    to_hex(instruction.arg_constant) if instruction.arg_constant is not None else '-'))
+            except InstructionFactoryError:
                 qp.drawText(0, y, '{}{} : {}, [unknown]'
                             .format('-> ' if i == 0 else '    ',
                                     to_hex(index),
                                     list(map(to_hex, opcode))))
 
             y += self._text_size + 5
+
+        qp.drawText(0, y, 'Machine blocked' if self._machine.Block else 'Machine not blocked')
 
     def _get_opcode_at(self, i):
         return bytearray([self._machine.Memory[i], self._machine.Memory[i + 1]])
