@@ -349,8 +349,10 @@ class Bcd(Instruction):
 class StoreRegisters(Instruction):
     def execute(self, machine: Machine):
         for i in range(0, self.vx() + 1):
-            machine.Memory[machine.AddressRegister] = machine.VRegisters[i]
-            machine.AddressRegister += 1
+            machine.Memory[machine.AddressRegister + i] = machine.VRegisters[i]
+
+        if machine.CompatibilityLoadStore:
+            machine.AddressRegister += self.vx() + 1
 
     @staticmethod
     def opcode_format() -> str:
@@ -360,8 +362,10 @@ class StoreRegisters(Instruction):
 class LoadRegisters(Instruction):
     def execute(self, machine: Machine):
         for i in range(0, self.vx() + 1):
-            machine.VRegisters[i] = machine.Memory[machine.AddressRegister]
-            machine.AddressRegister += 1
+            machine.VRegisters[i] = machine.Memory[machine.AddressRegister + i]
+
+        if machine.CompatibilityLoadStore:
+            machine.AddressRegister += self.vx() + 1
 
     @staticmethod
     def opcode_format() -> str:

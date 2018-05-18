@@ -7,7 +7,8 @@ from virtualmachine.screen import Screen
 
 
 class Machine:
-    def __init__(self, memory_size: int = 0x1000):
+    def __init__(self, memory_size: int = 0x1000, compatibility_load_store: bool = False):
+        self.CompatibilityLoadStore = compatibility_load_store
         self.Screen = Screen()
         self.Keyboard = Keyboard()
         self.MemorySize = memory_size
@@ -49,6 +50,7 @@ class Machine:
         self._instruction_executing = True
 
         instruction = self._get_next_instruction()
+
         instruction.execute(self)
 
         from virtualmachine.instruction import JumpInstruction

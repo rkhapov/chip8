@@ -9,19 +9,21 @@ from virtualmachine.machine import Machine
 
 
 class RunConfiguration:
-    def __init__(self, filename: str, debug: bool, sound: bool):
+    def __init__(self, filename: str, debug: bool, sound: bool, compatibility: bool, instructions_per_second):
         self._filename = filename
         self._debug = debug
         self._sound = sound
+        self._compatibility = compatibility
+        self._instructions_per_second = instructions_per_second
 
     def run(self):
-        machine = Machine()
+        machine = Machine(compatibility_load_store=self._compatibility)
         machine.load_program(self._filename)
 
         app = QApplication(sys.argv)
 
         if not self._debug:
-            chip8 = Chip8Widget(machine, self._sound)
+            chip8 = Chip8Widget(machine, self._sound, self._instructions_per_second)
         else:
             chip8 = Chip8DebugWidget(machine, self._sound)
 
@@ -55,8 +57,12 @@ Written by rkhapov (r.khapov@yandex.ru)
         parser.add_argument('filename', help='file with chip8 program')
         parser.add_argument('-s', '--sound', help='enable sound for chip8', action="store_true")
         parser.add_argument('-d', '--debug', help='enable debug mode', action="store_true")
+        parser.add_argument('-c', '--compatibility', help='enable compatibility mode for store and load instructions',
+                            action='store_true')
+        parser.add_argument('-f', '--frequency', help='frequency: amount of executing instructions per second',
+                            type=int, default=500)
         args = parser.parse_args()
 
         filename = args.filename
 
-        return RunConfiguration(filename, args.debug, args.sound)
+        return RunConfiguration(filename, args.debug, args.sound, args.compatibility, args.frequency)

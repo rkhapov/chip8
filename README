@@ -1,6 +1,4 @@
-This is the python interpreter of chip8
-
-usages:
-python3 chip8.py filename
-
-where filename - path to chip8 program
+This is the CHIP-8 interpreter
+See
+python chip8.py -h
+for more information
