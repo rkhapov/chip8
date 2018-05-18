@@ -54,16 +54,18 @@ class Chip8MachineStateWidget(QWidget):
     def _draw_state(self, qp):
         qp.setFont(QFont('Noto Sans', self._text_size))
 
+        t = self._text_size // 3
+
         qp.drawText(0, self._text_size, 'V: {}'.format(list(map(to_hex, self._machine.VRegisters))))
-        qp.drawText(0, 2 * self._text_size + 5, 'PC: {}, I: {}, DT: {}, ST: {}'
+        qp.drawText(0, 2 * self._text_size + t, 'PC: {}, I: {}, DT: {}, ST: {}'
                     .format(to_hex(self._machine.PC),
                             to_hex(self._machine.AddressRegister),
                             to_hex(self._machine.DelayTimer.get_count()),
                             to_hex(self._machine.SoundTimer.get_count())))
-        qp.drawText(0, 3 * self._text_size + 10, 'Stack: {}'.format(list(map(to_hex, self._machine.Stack.items()))))
-        qp.drawText(0, 4 * self._text_size + 15, 'Memory at 10-radius of PC:')
+        qp.drawText(0, 3 * self._text_size + 2 * t, 'Stack: {}'.format(list(map(to_hex, self._machine.Stack.items()))))
+        qp.drawText(0, 4 * self._text_size + 3 * t, 'Memory at 10-radius of PC:')
 
-        y = 5 * self._text_size + 20
+        y = 5 * self._text_size + 4 * t
 
         for i in range(-10, 11):
             index = self._machine.PC + i * 2
@@ -90,7 +92,7 @@ class Chip8MachineStateWidget(QWidget):
                                     to_hex(index),
                                     list(map(to_hex, opcode))))
 
-            y += self._text_size + 5
+            y += self._text_size + t
 
         qp.drawText(0, y, 'Machine blocked' if self._machine.Block else 'Machine not blocked')
 

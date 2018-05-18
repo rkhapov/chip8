@@ -50,6 +50,7 @@ class Chip8DebugWidget(QWidget):
             self._machine.Keyboard.key_up(self._key_dict[event.key()])
 
     def _execute_instruction(self):
+        print('execute')
         self._machine.execute_next_instruction()
         self._update_sound_delay()
         self._executed_number += 1
