@@ -54,7 +54,7 @@ class Chip8MachineStateWidget(QWidget):
     def _draw_state(self, qp):
         qp.setFont(QFont('Noto Sans', self._text_size))
 
-        t = self._text_size // 3
+        t = self._text_size // 2
 
         qp.drawText(0, self._text_size, 'V: {}'.format(list(map(to_hex, self._machine.VRegisters))))
         qp.drawText(0, 2 * self._text_size + t, 'PC: {}, I: {}, DT: {}, ST: {}'
